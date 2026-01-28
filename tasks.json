@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "nama_tugas": "presentasi",
+    "mata_pelajaran": "pkn",
+    "deadline": "22-02-2026",
+    "status": "Belum Selesai",
+    "tanggal_dibuat": "28-01-2026 00:54:58"
+  },
+  {
+    "id": 2,
+    "nama_tugas": "lks",
+    "mata_pelajaran": "mtk",
+    "deadline": "20-02-2026",
+    "status": "Belum Selesai",
+    "tanggal_dibuat": "28-01-2026 00:56:32"
+  }
+]

@@ -1,10 +1,55 @@
 import json
 import os
-from datetime import datetime
+import platform
+from datetime import datetime, timedelta
 from typing import List, Dict
+from tabulate import tabulate
+
+# Import winsound hanya untuk Windows
+if platform.system() == "Windows":
+    import winsound
 
 # File untuk menyimpan data
 DATA_FILE = "tasks.json"
+
+# Kata-kata semangat motivasi
+MOTIVASI = [
+    "💪 Kamu bisa! Jangan menyerah!",
+    "🌟 Setiap tugas selesai adalah pencapaian!",
+    "⚡ Semangat! Kamu lebih kuat dari yang kamu kira!",
+    "🎯 Fokus pada target, sukses ada di depan!",
+    "🚀 Terbang tinggi menuju kesuksesan!",
+    "✨ Kamu adalah bintang yang bersinar terang!",
+    "🏆 Jadilah versi terbaik dari dirimu!",
+    "💖 Cinta diri sendiri dengan menyelesaikan tugas!",
+    "🌈 Setelah hujan datanglah pelangi kesuksesan!",
+    "🎪 Hidup adalah petualangan, nikmati perjalanannya!",
+    "🎨 Kamu melukis masa depanmu dengan kerja keras!",
+    "🌺 Berkembanglah seperti bunga di musim semi!",
+    "🦋 Transformasi kecil menuju kesuksesan besar!",
+    "🌙 Malam gelap pasti akan berganti dengan fajar!",
+    "☀️ Setiap hari adalah kesempatan baru untuk bersinar!"
+]
+
+# ASCII art animasi imut
+ANIMASI_LOADING = [
+    "  ◜◝◜◝  Sedang memproses...  ◜◝◜◝  ",
+    "  ◝◜◝◜  Sedang memproses...  ◝◜◝◜  ",
+]
+
+def get_motivasi_random():
+    """Menampilkan kata motivasi random"""
+    import random
+    return random.choice(MOTIVASI)
+
+def show_cute_animation():
+    """Menampilkan animasi imut"""
+    import time
+    for _ in range(3):
+        for anim in ANIMASI_LOADING:
+            print(f"\r{anim}", end="", flush=True)
+            time.sleep(0.3)
+    print("\r✅ Selesai!                          \n")
 
 class TodoList:
     def __init__(self):
@@ -47,21 +92,35 @@ class TodoList:
         self.tasks.append(task)
         self.save_tasks()
         print(f"✅ Tugas '{nama_tugas}' berhasil ditambahkan!")
+        print(f"📝 {get_motivasi_random()}")
     
     def display_tasks(self) -> None:
-        """Menampilkan semua tugas"""
+        """Menampilkan semua tugas dengan format tabel, diurutkan berdasarkan deadline tercepat"""
         if not self.tasks:
             print("📭 Tidak ada tugas. Mulai tambahkan tugas baru!")
+            print(f"💌 {get_motivasi_random()}\n")
             return
         
-        print("\n" + "="*100)
-        print(f"{'ID':<5} {'NAMA TUGAS':<30} {'MATA PELAJARAN':<20} {'DEADLINE':<15} {'STATUS':<15}")
-        print("="*100)
+        # Urutkan berdasarkan deadline tercekat
+        sorted_tasks = sorted(self.tasks, key=lambda x: datetime.strptime(x['deadline'], "%d-%m-%Y"))
         
-        for task in self.tasks:
-            print(f"{task['id']:<5} {task['nama_tugas']:<30} {task['mata_pelajaran']:<20} {task['deadline']:<15} {task['status']:<15}")
+        table_data = []
+        for task in sorted_tasks:
+            status_emoji = self._get_status_emoji(task['status'])
+            table_data.append([
+                task['id'],
+                task['nama_tugas'],
+                task['mata_pelajaran'],
+                task['deadline'],
+                f"{status_emoji} {task['status']}"
+            ])
         
-        print("="*100 + "\n")
+        print("\n")
+        print(tabulate(table_data, 
+                      headers=["ID", "NAMA TUGAS", "MATA PELAJARAN", "DEADLINE", "STATUS"],
+                      tablefmt="grid",
+                      stralign="left"))
+        print()
     
     def delete_task(self, task_id: int) -> None:
         """Menghapus tugas berdasarkan ID"""
@@ -74,6 +133,7 @@ class TodoList:
                     t['id'] = i
                 self.save_tasks()
                 print(f"✅ Tugas '{nama}' berhasil dihapus!")
+                print(f"💪 {get_motivasi_random()}")
                 return
         
         print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!")
@@ -91,6 +151,9 @@ class TodoList:
                 task['status'] = status
                 self.save_tasks()
                 print(f"✅ Status tugas '{task['nama_tugas']}' diubah menjadi '{status}'!")
+                if status == "Selesai":
+                    print("🎉 Hebat! Kamu telah menyelesaikan satu tugas!")
+                    print(f"   {get_motivasi_random()}")
                 return
         
         print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!")
@@ -125,14 +188,23 @@ class TodoList:
             print(f"❌ Tidak ada tugas yang cocok dengan '{keyword}'")
             return
         
-        print("\n" + "="*100)
-        print(f"{'ID':<5} {'NAMA TUGAS':<30} {'MATA PELAJARAN':<20} {'DEADLINE':<15} {'STATUS':<15}")
-        print("="*100)
-        
+        table_data = []
         for task in results:
-            print(f"{task['id']:<5} {task['nama_tugas']:<30} {task['mata_pelajaran']:<20} {task['deadline']:<15} {task['status']:<15}")
+            status_emoji = self._get_status_emoji(task['status'])
+            table_data.append([
+                task['id'],
+                task['nama_tugas'],
+                task['mata_pelajaran'],
+                task['deadline'],
+                f"{status_emoji} {task['status']}"
+            ])
         
-        print("="*100 + "\n")
+        print("\n")
+        print(tabulate(table_data, 
+                      headers=["ID", "NAMA TUGAS", "MATA PELAJARAN", "DEADLINE", "STATUS"],
+                      tablefmt="grid",
+                      stralign="left"))
+        print()
     
     def sort_by_deadline(self) -> None:
         """Menampilkan tugas yang diurutkan berdasarkan deadline"""
@@ -142,16 +214,23 @@ class TodoList:
             print("📭 Tidak ada tugas!")
             return
         
-        print("\n" + "="*100)
-        print("📋 TUGAS DIURUTKAN BERDASARKAN DEADLINE:")
-        print("="*100)
-        print(f"{'ID':<5} {'NAMA TUGAS':<30} {'MATA PELAJARAN':<20} {'DEADLINE':<15} {'STATUS':<15}")
-        print("="*100)
-        
+        table_data = []
         for task in sorted_tasks:
-            print(f"{task['id']:<5} {task['nama_tugas']:<30} {task['mata_pelajaran']:<20} {task['deadline']:<15} {task['status']:<15}")
+            status_emoji = self._get_status_emoji(task['status'])
+            table_data.append([
+                task['id'],
+                task['nama_tugas'],
+                task['mata_pelajaran'],
+                task['deadline'],
+                f"{status_emoji} {task['status']}"
+            ])
         
-        print("="*100 + "\n")
+        print("\n📋 TUGAS DIURUTKAN BERDASARKAN DEADLINE:\n")
+        print(tabulate(table_data, 
+                      headers=["ID", "NAMA TUGAS", "MATA PELAJARAN", "DEADLINE", "STATUS"],
+                      tablefmt="grid",
+                      stralign="left"))
+        print()
     
     def show_details(self, task_id: int) -> None:
         """Menampilkan detail tugas"""
@@ -170,11 +249,83 @@ class TodoList:
                 return
         
         print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!")
+    
+    def _get_status_emoji(self, status: str) -> str:
+        """Mengembalikan emoji berdasarkan status"""
+        status_emojis = {
+            "Belum Selesai": "⏳",
+            "Sedang Dikerjakan": "⚙️",
+            "Selesai": "✅"
+        }
+        return status_emojis.get(status, "❓")
+    
+    def check_upcoming_deadlines(self) -> None:
+        """Mengecek dan memberikan alarm untuk tugas yang mendekati deadline"""
+        today = datetime.now()
+        upcoming_tasks = []
+        
+        for task in self.tasks:
+            if task['status'] != "Selesai":
+                deadline_date = datetime.strptime(task['deadline'], "%d-%m-%Y")
+                days_left = (deadline_date - today).days
+                
+                # Alarm jika deadline dalam 3 hari ke depan
+                if 0 <= days_left <= 3:
+                    upcoming_tasks.append((task, days_left))
+        
+        if upcoming_tasks:
+            print("\n" + "⚠️ " * 25)
+            print("🚨 ALARM! ADA TUGAS YANG MENDEKATI DEADLINE!")
+            print("⚠️ " * 25 + "\n")
+            
+            table_data = []
+            for task, days_left in upcoming_tasks:
+                if days_left == 0:
+                    warning = "🔴 HARI INI!"
+                elif days_left == 1:
+                    warning = "🟠 BESOK!"
+                else:
+                    warning = f"🟡 {days_left} hari lagi"
+                
+                table_data.append([
+                    task['id'],
+                    task['nama_tugas'],
+                    task['mata_pelajaran'],
+                    task['deadline'],
+                    warning
+                ])
+            
+            print(tabulate(table_data, 
+                          headers=["ID", "NAMA TUGAS", "MATA PELAJARAN", "DEADLINE", "⚠️ ALERT"],
+                          tablefmt="grid",
+                          stralign="left"))
+            print()
+            
+            # Mainkan sound alarm
+            self._play_alarm_sound()
+        else:
+            print("✅ Semua tugas masih aman, tidak ada yang mendekati deadline!\n")
+    
+    def _play_alarm_sound(self) -> None:
+        """Memainkan suara alarm"""
+        try:
+            if platform.system() == "Windows":
+                # Windows
+                winsound.Beep(1000, 500)
+                winsound.Beep(1000, 500)
+            elif platform.system() == "Darwin":
+                # macOS
+                os.system("afplay /System/Library/Sounds/Alarm.aiff")
+            else:
+                # Linux
+                print("\a" * 3)  # Bell character untuk Linux
+        except Exception as e:
+            print(f"(Tidak bisa memainkan alarm: {e})")
 
 def print_menu():
     """Menampilkan menu utama"""
     print("\n" + "="*50)
-    print("📚 APLIKASI TODOLIST")
+    print("📚 APLIKASI TODOLIST 📚")
     print("="*50)
     print("1. 📋 Tampilkan Semua Tugas")
     print("2. ➕ Tambah Tugas Baru")
@@ -184,8 +335,10 @@ def print_menu():
     print("6. 📅 Urutkan Tugas berdasarkan Deadline")
     print("7. 📝 Lihat Detail Tugas")
     print("8. 🔄 Ubah Status Tugas")
-    print("9. ❌ Keluar")
+    print("9. 🚨 Cek Reminder/Alarm")
+    print("10. ❌ Keluar")
     print("="*50)
+    print(f"✨ {get_motivasi_random()} ✨")
 
 def main():
     """Fungsi utama aplikasi"""
@@ -193,7 +346,7 @@ def main():
     
     while True:
         print_menu()
-        pilihan = input("Pilih menu (1-9): ").strip()
+        pilihan = input("Pilih menu (1-10): ").strip()
         
         if pilihan == "1":
             # Tampilkan semua tugas
@@ -202,6 +355,7 @@ def main():
         elif pilihan == "2":
             # Tambah tugas
             print("\n➕ TAMBAH TUGAS BARU")
+            show_cute_animation()
             nama_tugas = input("Nama Tugas: ").strip()
             if not nama_tugas:
                 print("❌ Nama tugas tidak boleh kosong!")
@@ -300,12 +454,19 @@ def main():
                 print("❌ Pilihan status tidak valid!")
         
         elif pilihan == "9":
+            # Cek reminder/alarm
+            print("\n🚨 CEK REMINDER/ALARM TUGAS")
+            todo.check_upcoming_deadlines()
+        
+        elif pilihan == "10":
             # Keluar
             print("\n👋 Terima kasih telah menggunakan Aplikasi TodoList!")
+            print(f"🌟 {get_motivasi_random()} 🌟")
+            print("💝 Sampai jumpa lagi!\n")
             break
         
         else:
-            print("❌ Pilihan tidak valid! Silakan pilih menu 1-9.")
+            print("❌ Pilihan tidak valid! Silakan pilih menu 1-10.")
 
 if __name__ == "__main__":
     main()
