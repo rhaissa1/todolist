@@ -1,6 +1,8 @@
 import json
 import os
 import platform
+import time
+import random
 from datetime import datetime, timedelta
 from typing import List, Dict
 from tabulate import tabulate
@@ -31,23 +33,16 @@ MOTIVASI = [
     "☀️ Setiap hari adalah kesempatan baru untuk bersinar!"
 ]
 
-# ASCII art animasi imut
-ANIMASI_LOADING = [
-    "  ◜◝◜◝  Sedang memproses...  ◜◝◜◝  ",
-    "  ◝◜◝◜  Sedang memproses...  ◝◜◝◜  ",
-]
-
 def get_motivasi_random():
     """Menampilkan kata motivasi random"""
-    import random
     return random.choice(MOTIVASI)
 
 def show_cute_animation():
     """Menampilkan animasi imut"""
-    import time
+    animasi = ["◜◝◜◝", "◝◜◝◜"]
     for _ in range(3):
-        for anim in ANIMASI_LOADING:
-            print(f"\r{anim}", end="", flush=True)
+        for anim in animasi:
+            print(f"\r  {anim}  Sedang memproses...  {anim}  ", end="", flush=True)
             time.sleep(0.3)
     print("\r✅ Selesai!                          \n")
 
@@ -92,7 +87,7 @@ class TodoList:
         self.tasks.append(task)
         self.save_tasks()
         print(f"✅ Tugas '{nama_tugas}' berhasil ditambahkan!")
-        print(f"📝 {get_motivasi_random()}")
+        print(f"📝 {get_motivasi_random()}\n")
     
     def display_tasks(self) -> None:
         """Menampilkan semua tugas dengan format tabel, diurutkan berdasarkan deadline tercepat"""
@@ -101,7 +96,7 @@ class TodoList:
             print(f"💌 {get_motivasi_random()}\n")
             return
         
-        # Urutkan berdasarkan deadline tercekat
+        # Urutkan berdasarkan deadline tercepat
         sorted_tasks = sorted(self.tasks, key=lambda x: datetime.strptime(x['deadline'], "%d-%m-%Y"))
         
         table_data = []
@@ -133,10 +128,10 @@ class TodoList:
                     t['id'] = i
                 self.save_tasks()
                 print(f"✅ Tugas '{nama}' berhasil dihapus!")
-                print(f"💪 {get_motivasi_random()}")
+                print(f"💪 {get_motivasi_random()}\n")
                 return
         
-        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!")
+        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!\n")
     
     def update_task_status(self, task_id: int, status: str) -> None:
         """Mengubah status tugas"""
@@ -153,10 +148,12 @@ class TodoList:
                 print(f"✅ Status tugas '{task['nama_tugas']}' diubah menjadi '{status}'!")
                 if status == "Selesai":
                     print("🎉 Hebat! Kamu telah menyelesaikan satu tugas!")
-                    print(f"   {get_motivasi_random()}")
+                    print(f"   {get_motivasi_random()}\n")
+                else:
+                    print()
                 return
         
-        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!")
+        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!\n")
     
     def edit_task(self, task_id: int, nama_tugas: str = None, mata_pelajaran: str = None, deadline: str = None) -> None:
         """Mengedit tugas"""
@@ -171,25 +168,28 @@ class TodoList:
                         datetime.strptime(deadline, "%d-%m-%Y")
                         task['deadline'] = deadline
                     except ValueError:
-                        print("❌ Format tanggal salah! Gunakan format DD-MM-YYYY")
+                        print("❌ Format tanggal salah! Gunakan format DD-MM-YYYY\n")
                         return
                 
                 self.save_tasks()
-                print(f"✅ Tugas berhasil diperbarui!")
+                print(f"✅ Tugas berhasil diperbarui!\n")
                 return
         
-        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!")
+        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!\n")
     
     def search_tasks(self, keyword: str) -> None:
         """Mencari tugas berdasarkan kata kunci"""
         results = [task for task in self.tasks if keyword.lower() in task['nama_tugas'].lower() or keyword.lower() in task['mata_pelajaran'].lower()]
         
         if not results:
-            print(f"❌ Tidak ada tugas yang cocok dengan '{keyword}'")
+            print(f"❌ Tidak ada tugas yang cocok dengan '{keyword}'\n")
             return
         
+        # Urutkan berdasarkan deadline
+        sorted_results = sorted(results, key=lambda x: datetime.strptime(x['deadline'], "%d-%m-%Y"))
+        
         table_data = []
-        for task in results:
+        for task in sorted_results:
             status_emoji = self._get_status_emoji(task['status'])
             table_data.append([
                 task['id'],
@@ -248,7 +248,7 @@ class TodoList:
                 print("="*50 + "\n")
                 return
         
-        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!")
+        print(f"❌ Tugas dengan ID {task_id} tidak ditemukan!\n")
     
     def _get_status_emoji(self, status: str) -> str:
         """Mengembalikan emoji berdasarkan status"""
@@ -332,13 +332,12 @@ def print_menu():
     print("3. ✏️  Edit Tugas")
     print("4. 🗑️  Hapus Tugas")
     print("5. 🔍 Cari Tugas")
-    print("6. 📅 Urutkan Tugas berdasarkan Deadline")
-    print("7. 📝 Lihat Detail Tugas")
-    print("8. 🔄 Ubah Status Tugas")
-    print("9. 🚨 Cek Reminder/Alarm")
-    print("10. ❌ Keluar")
+    print("6. � Lihat Detail Tugas")
+    print("7. 🔄 Ubah Status Tugas")
+    print("8. 🚨 Cek Reminder/Alarm")
+    print("9. ❌ Keluar")
     print("="*50)
-    print(f"✨ {get_motivasi_random()} ✨")
+    print(f"✨ {get_motivasi_random()} ✨\n")
 
 def main():
     """Fungsi utama aplikasi"""
@@ -346,7 +345,7 @@ def main():
     
     while True:
         print_menu()
-        pilihan = input("Pilih menu (1-10): ").strip()
+        pilihan = input("Pilih menu (1-9): ").strip()
         
         if pilihan == "1":
             # Tampilkan semua tugas
@@ -358,17 +357,17 @@ def main():
             show_cute_animation()
             nama_tugas = input("Nama Tugas: ").strip()
             if not nama_tugas:
-                print("❌ Nama tugas tidak boleh kosong!")
+                print("❌ Nama tugas tidak boleh kosong!\n")
                 continue
             
             mata_pelajaran = input("Mata Pelajaran: ").strip()
             if not mata_pelajaran:
-                print("❌ Mata pelajaran tidak boleh kosong!")
+                print("❌ Mata pelajaran tidak boleh kosong!\n")
                 continue
             
             deadline = input("Deadline (DD-MM-YYYY): ").strip()
             if not deadline:
-                print("❌ Deadline tidak boleh kosong!")
+                print("❌ Deadline tidak boleh kosong!\n")
                 continue
             
             todo.add_task(nama_tugas, mata_pelajaran, deadline)
@@ -380,7 +379,7 @@ def main():
             try:
                 task_id = int(input("Masukkan ID tugas yang ingin diedit: ").strip())
             except ValueError:
-                print("❌ ID harus berupa angka!")
+                print("❌ ID harus berupa angka!\n")
                 continue
             
             print("(Kosongkan input jika tidak ingin mengubah)")
@@ -400,7 +399,7 @@ def main():
             try:
                 task_id = int(input("Masukkan ID tugas yang ingin dihapus: ").strip())
             except ValueError:
-                print("❌ ID harus berupa angka!")
+                print("❌ ID harus berupa angka!\n")
                 continue
             
             todo.delete_task(task_id)
@@ -410,35 +409,31 @@ def main():
             print("\n🔍 CARI TUGAS")
             keyword = input("Masukkan kata kunci pencarian: ").strip()
             if not keyword:
-                print("❌ Kata kunci tidak boleh kosong!")
+                print("❌ Kata kunci tidak boleh kosong!\n")
                 continue
             
             todo.search_tasks(keyword)
         
         elif pilihan == "6":
-            # Urutkan berdasarkan deadline
-            todo.sort_by_deadline()
-        
-        elif pilihan == "7":
             # Lihat detail tugas
             print("\n📝 LIHAT DETAIL TUGAS")
             todo.display_tasks()
             try:
                 task_id = int(input("Masukkan ID tugas: ").strip())
             except ValueError:
-                print("❌ ID harus berupa angka!")
+                print("❌ ID harus berupa angka!\n")
                 continue
             
             todo.show_details(task_id)
         
-        elif pilihan == "8":
+        elif pilihan == "7":
             # Ubah status tugas
             print("\n🔄 UBAH STATUS TUGAS")
             todo.display_tasks()
             try:
                 task_id = int(input("Masukkan ID tugas: ").strip())
             except ValueError:
-                print("❌ ID harus berupa angka!")
+                print("❌ ID harus berupa angka!\n")
                 continue
             
             print("Status yang tersedia:")
@@ -451,14 +446,14 @@ def main():
             if status_pilihan in status_map:
                 todo.update_task_status(task_id, status_map[status_pilihan])
             else:
-                print("❌ Pilihan status tidak valid!")
+                print("❌ Pilihan status tidak valid!\n")
         
-        elif pilihan == "9":
+        elif pilihan == "8":
             # Cek reminder/alarm
             print("\n🚨 CEK REMINDER/ALARM TUGAS")
             todo.check_upcoming_deadlines()
         
-        elif pilihan == "10":
+        elif pilihan == "9":
             # Keluar
             print("\n👋 Terima kasih telah menggunakan Aplikasi TodoList!")
             print(f"🌟 {get_motivasi_random()} 🌟")
@@ -466,7 +461,7 @@ def main():
             break
         
         else:
-            print("❌ Pilihan tidak valid! Silakan pilih menu 1-10.")
+            print("❌ Pilihan tidak valid! Silakan pilih menu 1-9.\n")
 
 if __name__ == "__main__":
     main()
